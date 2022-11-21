@@ -38,7 +38,7 @@ us-east-1
 
 ---
 
-## Create an EKS cluster
+## Create an EKS cluster and deploy AWS Load Balancer Controller
 
 Refer to the https://github.com/DevSecOpsSamples/eks-eksctl page.
 
@@ -98,3 +98,5 @@ kubectl delete -f app/python-ping-api.yaml
 ```
 
 ## References
+
+- [Application load balancing on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html)
