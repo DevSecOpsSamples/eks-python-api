@@ -5,6 +5,7 @@
 The sample project to deploy Python REST API application, Service, HorizontalPodAutoscaler, Ingress on EKS.
 
 - [app.py](app/app.py)
+- [Dockerfile](app/Dockerfile)
 - [python-ping-api-template.yaml](app/python-ping-api-template.yaml)
 
 ---
