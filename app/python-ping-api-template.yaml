@@ -1,0 +1,101 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-ping-api
+  annotations:
+    app: 'python-ping-api'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: python-ping-api
+  template:
+    metadata:
+      labels:
+        app: python-ping-api
+    spec:
+      containers:
+        - name: python-ping-api
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/python-ping-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "0.25"
+              memory: "256Mi"
+            limits:
+              cpu: "0.25"
+              memory: "256Mi"
+          env:
+          - name: env
+            value: "dev"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-ping-api
+  annotations:
+    app: 'python-ping-api'
+    alb.ingress.kubernetes.io/healthcheck-path: "/ping"
+spec:
+  selector:
+    app: python-ping-api
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "python-ping-api-ingress"
+  annotations:
+    app: 'python-ping-api'
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: python-ping-api
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=30
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=10
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<region>:<account-id>:certificate/<certificate-id>
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/tags: env=dev
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '16'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '15'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '5'
+spec:
+  rules:
+  - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: python-ping-api
+                port:
+                  number: 8000
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: 'python-ping-api-hpa'
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: 'python-ping-api'
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
