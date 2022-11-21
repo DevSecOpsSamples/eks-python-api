@@ -17,7 +17,7 @@ The sample project to deploy Python REST API application, Service, HorizontalPod
 
 ### Set AWS configurations
 
-Set AWS configurations with `aws configure` for Default region name:
+Set AWS configurations with `aws configure` for default region and keys:
 
 ```bash
 aws configure
